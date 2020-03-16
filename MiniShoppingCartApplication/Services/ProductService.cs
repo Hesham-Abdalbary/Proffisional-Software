@@ -22,17 +22,19 @@ namespace MiniShoppingCartApplication.Services
             _hostingEnvironment = hostingEnvironment;
         }
 
-        public List<ProductDto> GetAll()
+        public List<ProductDto> GetAll(string rootPath)
         {
             var products = _repo.GetAll();
             var productsModels = Mapper.Map<List<Product>, List<ProductDto>>(products);
+            productsModels = productsModels.Select( p => { p.ImagePath = rootPath + p.ImagePath; return p; }).ToList();
             return productsModels;
         }
 
-        public ProductDto GetByID(int productID)
+        public ProductDto GetByID(int productID, string rootPath)
         {
             var productEntity = _repo.GetByID(productID);
             var productModel = Mapper.Map<Product, ProductDto>(productEntity);
+            productModel.ImagePath = rootPath + productModel.ImagePath;
             return productModel;
         }
 
@@ -41,12 +43,12 @@ namespace MiniShoppingCartApplication.Services
             if (files != null)
             {
                 var file = files.FirstOrDefault();
-                var path = Path.Combine(_hostingEnvironment.ContentRootPath, "ProductsImages\\" + file.FileName);
+                var path = Path.Combine(_hostingEnvironment.ContentRootPath, "wwwroot\\" + file.FileName);
                 using (FileStream filestream = File.Create(path))
                 {
-                    file.CopyToAsync(filestream);
-                    filestream.FlushAsync();
-                    productModel.ImagePath = path;
+                    file.CopyTo(filestream);
+                    filestream.Flush();
+                    productModel.ImagePath = "//" + file.FileName;
                 }
             }
             var productEntity = Mapper.Map<ProductDto, Product>(productModel);
@@ -54,22 +56,22 @@ namespace MiniShoppingCartApplication.Services
             return addProductResult;
         }
 
-        public int Update(ProductDto productModel, List<IFormFile> files)
+        public int Update(ProductDto productModel, List<IFormFile> files, string rootPath)
         {
             if(files != null)
             {
                 var file = files.FirstOrDefault();
-                var path = Path.Combine(_hostingEnvironment.ContentRootPath, "ProductsImages\\" + file.FileName);
+                var path = Path.Combine(_hostingEnvironment.ContentRootPath, "wwwroot\\" + file.FileName);
                 using (FileStream filestream = File.Create(path))
                 {
                     file.CopyToAsync(filestream);
                     filestream.FlushAsync();
-                    productModel.ImagePath = path;
+                    productModel.ImagePath = "//" + file.FileName;
                 }
             }
             else
             {
-                var product = GetByID(productModel.ProductID);
+                var product = GetByID(productModel.ProductID, rootPath);
                 productModel.ImagePath = product.ImagePath;
             }
             var productEntity = Mapper.Map<ProductDto, Product>(productModel);

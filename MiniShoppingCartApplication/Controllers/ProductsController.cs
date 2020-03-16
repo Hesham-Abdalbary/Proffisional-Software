@@ -13,6 +13,7 @@ namespace MiniShoppingCartApplication.Controllers
     public class ProductsController : ControllerBase
     {
         private ProductService _productService;
+        public string ServerRootPath { get { return $"{Request.Scheme}://{Request.Host}{Request.PathBase}"; } }
 
         public ProductsController(ProductService productService)
         {
@@ -23,14 +24,14 @@ namespace MiniShoppingCartApplication.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<ProductDto>> Get()
         {
-            return _productService.GetAll();
+            return _productService.GetAll(ServerRootPath);
         }
 
         // GET api/values/5
         [HttpGet("{id}")]
         public ActionResult<ProductDto> Get(int id)
         {
-            return _productService.GetByID(id);
+            return _productService.GetByID(id, ServerRootPath);
         }
 
         // POST api/values
@@ -57,7 +58,7 @@ namespace MiniShoppingCartApplication.Controllers
             product.Quantity = int.Parse(HttpContext.Request.Form["Quantity"]);
             product.ProductID = id;
             var files = Request.Form.Files.Count() > 0 ? Request.Form.Files.ToList() : null;
-            return _productService.Update(product, files);
+            return _productService.Update(product, files, ServerRootPath);
         }
 
         // DELETE api/values/5
